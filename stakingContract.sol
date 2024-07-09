@@ -19,10 +19,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Staking {
     uint256 constant maturityTime = 15552000; // 6 months in seconds
-    uint256 constant maxSlash = 1000; // 10% in basis points
-    uint256 constant minSlash = 50; // 0.5% in basis points
-    uint256 constant initialAPR = 200; // 200% initial APR
-    uint256 constant minAPR = 1; // 1% minimum APR
+    uint256 constant maxSlash = 1000; // 10% 
+    uint256 constant minSlash = 50; // 0.5% 
+    uint256 constant initialAPR = 200; 
+    uint256 constant minAPR = 1; 
     uint256 constant flatAPR = 25; // Flat APR when TVL exceeds $10M
     uint256 constant thresholdTVL = 10000000 * 1e18; // $10M threshold for flat APR
 
@@ -67,7 +67,7 @@ contract Staking {
         require(stakeInfo.amount >= amount, "Insufficient staked amount");
 
         uint256 slashingPercentage = calculateSlashing(stakeInfo.stakeInTimestamp);
-        uint256 slashingAmount = (amount * slashingPercentage) / 10000;
+        uint256 slashingAmount = (amount * slashingPercentage) / 100;
 
         uint256 transferAmount = amount - slashingAmount;
 

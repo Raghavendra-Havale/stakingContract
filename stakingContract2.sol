@@ -7,11 +7,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Staking {
     uint256 constant maturityTime = 15552000; // 6 months in seconds
-    uint256 constant maxSlash = 1000; // 10% 
-    uint256 constant minSlash = 50; // 0.5% 
-    uint256 constant initialAPR = 200; 
-    uint256 constant minAPR = 1; 
-    uint256 constant flatAPR = 25; // Flat APR when TVL exceeds $10M
+    uint256 constant maxSlash = 10 * 1e18; // 10% 
+    uint256 constant minSlash = 0.5 * 1e18; // 0.5% 
+    uint256 constant initialAPR = 200*1e18; 
+    uint256 constant minAPR = 1e18; 
+    uint256 constant flatAPR = 25 * 1e18; // Flat APR when TVL exceeds $10M
     uint256 constant thresholdTVL = 10000000 * 1e18; // $10M threshold for flat APR
 
     struct StakeInfo {
@@ -58,7 +58,7 @@ contract Staking {
         claimReward(stakeId);
 
         uint256 slashingPercentage = calculateSlashing(stakeInfo.stakeInTimestamp);
-        uint256 slashingAmount = (amount * slashingPercentage) / 100;
+        uint256 slashingAmount = (amount * slashingPercentage) / 100 * 1e18;
 
         uint256 transferAmount = amount - slashingAmount;
 
@@ -72,7 +72,7 @@ contract Staking {
         require(stakeInfo.amount > 0, "No stake found with this ID");
 
         uint256 currentAPR = getCurrentAPR();
-        uint256 reward = (stakeInfo.amount * (block.timestamp - stakeInfo.lastRewardClaimTimestamp) * currentAPR) / (60 * 60 * 24 * 365 * 100);
+        uint256 reward = (stakeInfo.amount * (block.timestamp - stakeInfo.lastRewardClaimTimestamp) * currentAPR) / (60 * 60 * 24 * 365 * 100 * 1e18);
 
         return reward;
     }
@@ -100,9 +100,10 @@ contract Staking {
 
     function getTVL() public view returns (uint256) {
         (, int256 price, , ,) = priceFeed.latestRoundData();
+        uint16 decimal=priceFeed.decimals();
         require(price > 0, "Invalid price feed");
-        uint256 priceInUSD = uint256(price);
-        return (totalStaked * priceInUSD) / 1e18;
+        uint256 priceInUSD = uint256(price)/uint256(decimal);
+        return (totalStaked * priceInUSD);
     }
 
     function getCurrentAPR() public view returns (uint256) {
@@ -112,7 +113,7 @@ contract Staking {
             return flatAPR;
         }
 
-        uint256 aprDecayRate = (initialAPR - minAPR) / thresholdTVL;
+        uint256 aprDecayRate = ((initialAPR - minAPR) / thresholdTVL)*1e18;
         uint256 currentAPR = initialAPR - (aprDecayRate * tvlInUSD);
 
         return currentAPR > minAPR ? currentAPR : minAPR;
